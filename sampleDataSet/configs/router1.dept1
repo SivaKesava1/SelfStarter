@@ -1,0 +1,178 @@
+config-register 0xF
+version 15.2
+hostname router1.dept1
+ip name-server 184.39.1.196
+ip name-server 134.67.18.9
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+spanning-tree vlan 2-4,8,10,448 priority 24576
+vlan internal allocation policy ascending
+vlan 2
+ name mgmt_dept1
+vlan 3
+ name aux_mgmt_dept1
+vlan 4
+ name wlan_mgmt_dept1
+vlan 448
+ name voip_dept1
+
+interface Loopback0
+ ip address 181.34.234.44 255.255.255.255
+ ipv6 address c9fd:2b60:124c:1a13:f145:b97b:bb86:7a12/128
+ ipv6 ospf 52 area 53
+interface GigabitEthernet1/1/3
+ shutdown
+interface GigabitEthernet1/1/4
+ shutdown
+interface TenGigabitEthernet1/1/1
+ shutdown
+interface TenGigabitEthernet1/1/2
+ shutdown
+interface Vlan1
+ no ip address
+ shutdown
+interface Vlan2
+ ip address 178.218.28.19 255.255.255.240
+ ip access-group mgmt_dept1_in in
+ ip access-group mgmt_dept1_out out
+ no ip redirects
+ no ip proxy-arp
+ standby 2 ip 178.218.28.17
+ standby 2 priority 200
+ standby 2 preempt
+ standby 2 track 1 decrement 50
+interface Vlan3
+ ip address 178.221.212.140 255.255.255.224
+ ip access-group aux_mgmt_dept1_in in
+ ip access-group aux_mgmt_dept1_out out
+ no ip redirects
+ standby 3 ip 178.221.212.143
+ standby 3 priority 200
+ standby 3 preempt
+ standby 3 track 1 decrement 50
+interface Vlan4
+ ip address 178.218.153.174 255.255.255.192
+ ip access-group wlan_mgmt_dept1_in in
+ ip helper-address 184.39.1.211
+ ip helper-address 184.39.1.221
+ no ip redirects
+ no ip proxy-arp
+ standby 4 ip 178.218.153.173
+ standby 4 priority 200
+ standby 4 preempt
+ standby 4 track 1 decrement 50
+interface Vlan448
+ ip address 178.222.147.127 255.255.255.128
+ ip access-group voip_dept1_in in
+ ip access-group voip_dept1_out out
+ ip helper-address 184.39.1.211
+ ip helper-address 184.39.1.221
+ no ip redirects
+ no ip proxy-arp
+ standby 20 ip 178.222.147.124
+ standby 20 priority 200
+ standby 20 preempt
+ standby 20 track 5 decrement 50
+ip access-list extended aux_mgmt_dept1_in
+ deny ip any 181.34.233.255 0.0.31.255
+ deny ip any 184.39.114.176 0.0.15.255
+ deny ip any 178.218.140.75 0.0.255.255
+ permit ip 178.221.212.142 0.0.0.31 any
+ deny ip any any
+ip access-list extended aux_mgmt_dept1_out
+ permit ip host 184.39.7.120 178.221.212.142 0.0.0.31
+ permit ip 181.34.35.223 0.0.0.31 178.221.212.142 0.0.0.31
+ permit ip 181.34.220.24 0.0.0.255 178.221.212.142 0.0.0.31
+ permit ip 181.34.198.123 0.0.0.255 178.221.212.142 0.0.0.31
+ permit ip 134.67.18.104 0.0.0.63 178.221.212.142 0.0.0.31
+ permit ip host 181.34.209.13 178.221.212.142 0.0.0.31
+ permit ip 134.67.18.8 0.0.0.7 178.221.212.142 0.0.0.31
+ permit ip 184.39.1.197 0.0.0.7 178.221.212.142 0.0.0.31
+ permit ip 184.39.218.207 0.0.0.15 178.221.212.142 0.0.0.31
+ permit ip 184.39.218.214 0.0.0.15 178.221.212.142 0.0.0.31
+ permit ip host 184.39.7.104 178.221.212.142 0.0.0.31
+ deny ip any any
+ip access-list extended mgmt_dept1_in
+ deny ip any 181.34.233.255 0.0.31.255
+ deny ip any 184.39.114.176 0.0.15.255
+ deny ip any 178.218.140.75 0.0.15.255
+ permit ip 178.218.28.17 0.0.0.15 any
+ deny ip any any
+ip access-list extended mgmt_dept1_out
+ deny tcp any any eq 4786
+ permit ip any any
+ip access-list extended wlan_mgmt_dept1_in
+ permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps
+ permit udp 184.39.1.215 0.0.0.15 eq bootps 178.218.153.172 0.0.0.63 eq bootps
+ permit udp 178.218.153.172 0.0.0.63 184.39.1.215 0.0.0.15
+ permit icmp host 181.34.220.12 178.218.153.172 0.0.0.63
+ permit icmp host 181.34.198.115 178.218.153.172 0.0.0.63
+ permit ip 178.218.153.172 0.0.0.63 178.218.211.10 0.0.0.255
+ deny ip any 181.34.233.255 0.0.31.255
+ deny ip any 184.39.114.176 0.0.15.255
+ deny ip any 178.218.140.75 0.0.255.255
+ permit ip 178.218.153.172 0.0.0.63 any
+ deny ip any any
+ip access-list extended voip_dept1_in
+ permit udp 178.222.147.125 0.0.0.255 224.0.0.0 0.255.255.255
+ permit udp 178.222.147.125 0.0.0.255 184.39.1.197 0.0.0.15 eq domain
+ permit tcp 178.222.147.125 0.0.0.255 184.39.1.197 0.0.0.15 eq domain
+ permit udp 178.222.147.125 0.0.0.255 134.67.18.8 0.0.0.15 eq domain
+ permit tcp 178.222.147.125 0.0.0.255 134.67.18.8 0.0.0.15 eq domain
+ permit udp host 0.0.0.0 eq bootpc host 255.255.255.255 eq bootps
+ permit udp 184.39.1.215 0.0.0.15 eq bootps 178.222.147.125 0.0.0.255 eq bootps
+ permit udp 178.222.147.125 0.0.0.255 184.39.1.215 0.0.0.15
+ permit ip 178.222.147.125 0.0.0.255 178.222.241.104 0.0.0.31
+ permit ip 178.222.147.125 0.0.0.255 178.222.254.34 0.0.0.15
+ permit ip 178.222.147.125 0.0.0.255 181.34.205.245 0.0.0.31
+ permit udp 178.222.147.125 0.0.0.255 178.222.240.0 0.0.127.255 range 16384 32767
+ permit udp 178.222.147.125 0.0.0.255 178.222.45.101 0.0.63.255 range 16384 32767
+ permit udp 178.222.147.125 0.0.0.255 178.222.78.95 0.0.31.255 range 16384 32767
+ permit udp 178.222.147.125 0.0.0.255 178.222.103.252 0.0.15.255 range 16384 32767
+ permit ip 178.222.147.125 0.0.0.255 181.34.215.178 0.0.0.1
+ permit ip 178.222.147.125 0.0.0.255 181.34.214.61 0.0.0.1
+ permit ip 178.222.147.125 0.0.0.255 181.34.215.72 0.0.0.1
+ permit ip 178.222.147.125 0.0.0.255 host 181.34.222.210
+ permit ip 178.222.147.125 0.0.0.255 host 181.34.222.221
+ permit ip 178.222.147.125 0.0.0.255 178.222.241.51 0.0.0.15
+ permit ip 178.222.147.125 0.0.0.255 178.219.237.239 0.0.0.15
+ permit ip 178.222.147.125 0.0.0.255 host 181.34.53.90
+ permit ip 178.222.147.125 0.0.0.255 178.222.241.104 0.0.0.255
+ deny ip any any
+ip access-list extended voip_dept1_out
+ permit udp 224.0.0.0 0.255.255.255 178.222.147.125 0.0.0.255
+ permit udp 184.39.1.197 0.0.0.15 eq domain 178.222.147.125 0.0.0.255
+ permit tcp 184.39.1.197 0.0.0.15 eq domain 178.222.147.125 0.0.0.255
+ permit udp 134.67.18.8 0.0.0.15 eq domain 178.222.147.125 0.0.0.255
+ permit tcp 134.67.18.8 0.0.0.15 eq domain 178.222.147.125 0.0.0.255
+ permit udp 178.222.147.125 0.0.0.255 eq bootps host 0.0.0.0 eq bootps
+ permit udp 184.39.1.215 0.0.0.15 178.222.147.125 0.0.0.255
+ permit ip 178.222.241.104 0.0.0.31 178.222.147.125 0.0.0.255
+ permit ip 178.222.254.34 0.0.0.15 178.222.147.125 0.0.0.255
+ permit ip 181.34.205.245 0.0.0.31 178.222.147.125 0.0.0.255
+ permit udp 178.222.240.0 0.0.127.255 178.222.147.125 0.0.0.255 range 16384 32767
+ permit udp 178.222.45.101 0.0.63.255 178.222.147.125 0.0.0.255 range 16384 32767
+ permit udp 178.222.78.95 0.0.31.255 178.222.147.125 0.0.0.255 range 16384 32767
+ permit udp 178.222.103.252 0.0.15.255 178.222.147.125 0.0.0.255 range 16384 32767
+ permit ip 181.34.215.178 0.0.0.1 178.222.147.125 0.0.0.255
+ permit ip 181.34.214.61 0.0.0.1 178.222.147.125 0.0.0.255
+ permit ip 181.34.215.72 0.0.0.1 178.222.147.125 0.0.0.255
+ permit ip host 181.34.222.210 178.222.147.125 0.0.0.255
+ permit ip host 181.34.222.221 178.222.147.125 0.0.0.255
+ permit ip 178.222.241.51 0.0.0.15 178.222.147.125 0.0.0.255
+ permit ip 178.219.237.239 0.0.0.15 178.222.147.125 0.0.0.255
+ permit tcp host 181.34.53.90 178.222.147.125 0.0.0.255 eq 443
+ permit tcp host 181.34.53.90 178.222.147.125 0.0.0.255 eq www
+ permit ip 178.222.241.104 0.0.0.255 178.222.147.125 0.0.0.255
+ deny ip any any
+logging facility local6
+logging source-interface Loopback0
+logging host 181.34.220.15
+logging host 181.34.198.96
+ntp source Loopback0
+ntp access-group peer 10
+ntp server 184.39.218.202
+ntp server 184.39.218.203 prefer
+ntp server 184.39.218.208
+ntp server 184.39.218.209
+end
