@@ -23,8 +23,8 @@ To provide actionable feedback to the operators and to have a better visual repr
 
 ## Installation
 1. Grab the September 2019 `allinone` Batfish Docker container using : `docker pull batfish/allinone:2019.10.14`. 
-2. This tool uses the Python Client of Batfish which can be installed using: `python3 -m pip install --upgrade git+https://github.com/batfish/pybatfish.git`
-3. Install the required Python libraries using `python3 -m pip install munkres pandas plotly matplotlib docopt`.
+2. This tool uses the Python Client of Batfish which can be installed using: `python3.6 -m pip install --upgrade git+https://github.com/batfish/pybatfish.git`
+3. Install the required Python libraries using `python3.6 -m pip install munkres pandas plotly matplotlib docopt`.
 4. Clone the SelfStarter repository. 
 
 ## Running
