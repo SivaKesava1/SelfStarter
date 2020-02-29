@@ -2,6 +2,9 @@
 
 SelfStarter  automatically  infers  likely network configuration errors, without  requiring  a  formal  specification  and  working directly with existing network configuration files. Given the configuration files of a role, SelfStarter can infer a set of parameterized templates for complex  configuration  segments such as ACLs, PrefixLists and RoutePolicies by modeling  the  (likely)  intentional  differences as variations within a template while modeling the (likely) erroneous differences as variations across  templates  and  uses  the  templates  to  propose   high-quality configuration outliers.
 
+:page_with_curl: [NSDI 2020](https://www.usenix.org/conference/nsdi20) -- [Finding Network Misconfigurations by Automatic Template Inference](https://www.usenix.org/conference/nsdi20/presentation/kakarla)
+
+
 <details>
 
 <summary><kbd>:arrow_down: CLICK</kbd>to reveal an ACL templating example.</summary>
@@ -73,10 +76,13 @@ To provide actionable feedback to the operators and to have a better visual repr
 
 ```
 @inproceedings {246314,
-title = {Finding Network Misconfigurations through Automatic Template Inference},
+author = {Siva Kesava Reddy Kakarla and Alan Tang and Ryan Beckett and Karthick Jayaraman and Todd Millstein and Yuval Tamir and George Varghese},
+title = {Finding Network Misconfigurations by Automatic Template Inference },
 booktitle = {17th {USENIX} Symposium on Networked Systems Design and Implementation ({NSDI} 20)},
 year = {2020},
+isbn = {978-1-939133-13-7},
 address = {Santa Clara, CA},
+pages = {999--1013},
 url = {https://www.usenix.org/conference/nsdi20/presentation/kakarla},
 publisher = {{USENIX} Association},
 month = feb,
