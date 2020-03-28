@@ -462,13 +462,13 @@ def FormatBlock(configFormat, action, lines, linePredicateMap, patternString):
             if line[0] == line[1] == line[2]:
                 tmp[3] = " "
             elif line[0] == line[1]:
-                tmp[3] = "/"+line[0] + " le " + line[2]
+                tmp[3] = " le " + line[2]
             elif line[1] == line[2] and line[0] != line[1]:
-                tmp[3] = "/"+line[0] + " eq " + line[1]
+                tmp[3] = " eq " + line[1]
             elif line[1] == line[2]:
-                tmp[3] = "/"+line[0] + " ge " + line[1]
+                tmp[3] = " ge " + line[1]
             else:
-                tmp[3] = "/"+line[0] + " ge " + line[1] + " le " + line[2]
+                tmp[3] = " ge " + line[1] + " le " + line[2]
             output += "{:<3}: {:<3}: {} {} {}\n".format(
                 str(line[LINENUM]), tmp[0], tmp[1], tmp[2], tmp[3])
             htmlCmds.append(tmp)
