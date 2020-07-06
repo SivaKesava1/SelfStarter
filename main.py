@@ -85,19 +85,18 @@ def WriteFile(content, filename, outputPath):
 def ReadFile(cmap, filePath):
     if os.path.isfile(filePath):
         with open(filePath, "r") as f:
-            for line in f:
-                if line[-1] == "\n":
-                    line = line[:-1]
-                if "Empty" in line or "Error" in line:
-                    key = line.split(":")[0]
-                    if key not in cmap:
-                        cmap[key] = 0
-                    cmap[key] += int(line.split(":")[1].split(",")[0])
-                if "Number" in line:
-                    key = line.split("=")[0]
-                    if key not in cmap:
-                        cmap[key] = 0
-                    cmap[key] += int(line.split("=")[1])
+            data = json.load(f)
+            for k,v in data["Stats"].items():
+                if k not in cmap:
+                    cmap[k] = 0
+                    cmap[k] += v
+            for v in data["Segments"]:
+                if "Single Parameter Outliers" not in cmap:
+                    cmap["Single Parameter Outliers"] = 0
+                if "Spurious Parameter Outliers" not in cmap:
+                    cmap["Spurious Parameter Outliers"] = 0
+                cmap["Single Parameter Outliers"] += v["Single Parameter Outliers"]
+                cmap["Spurious Parameter Outliers"] += v["Spurious Parameter Outliers"]
     else:
         pass
 
@@ -107,13 +106,12 @@ def Statistics(rootDir, prefixMap, routeMap, aclMap):
         for name in dirs:
             direc = os.path.join(root, name)
             ReadFile(prefixMap, direc + os.path.sep +
-                    "PrefixLists" + os.path.sep + "AllDiff.txt")
+                     "PrefixLists" + os.path.sep + "AllDiff.json")
             ReadFile(routeMap, direc + os.path.sep +
-                    "RoutePolicies" + os.path.sep + "AllDiff.txt")
+                     "RoutePolicies" + os.path.sep + "AllDiff.json")
             ReadFile(aclMap, direc + os.path.sep +
-                    "ACLs" + os.path.sep + "AllDiff.txt")
+                     "ACLs" + os.path.sep + "AllDiff.json")
             Statistics(direc, prefixMap, routeMap, aclMap)
-   
 
 
 def AllSegments(devicesInfo, segmentType, outputDirectory, segmentNameRegex, **functions):
@@ -147,17 +145,17 @@ def AllSegments(devicesInfo, segmentType, outputDirectory, segmentNameRegex, **f
                     groupsList, singleParamQ, spuriousQ, code, exactGroupSizes = StructuredGeneralization(
                         segmentName+"$", devicesInfo, blockSeqFun, outputDirectory, foundRouters, emptyDefDevices, **functions)
                     if groupsList:
-                        questions = "\n\nFor Segment  " + segmentName + " \n"
-                        questions += "Sizes of Groups found = " + \
-                            str([len(tup[1]) for tup in groupsList])
-                        questions += "\nNumber of Single Parameter outliers = " + \
-                            str(singleParamQ.count('\n'))
-                        questions += "\nNumber of Spurious Parameter outliers = " + \
-                            str(spuriousQ.count('\n'))
+                        jsonTmp = {}
+                        jsonTmp["Name"] = segmentName
+                        jsonTmp["Groups"] = [len(tup[1]) for tup in groupsList]
+                        jsonTmp["Single Parameter Outliers"] = singleParamQ.count(
+                            '\n')
+                        jsonTmp["Spurious Parameter Outliers"] = spuriousQ.count(
+                            '\n')
                         largestGroup = len(
                             groupsList[0][1])/float(sum([len(tup[1]) for tup in groupsList]))
                         largestGroupSizeStatMap.setdefault(
-                            largestGroup, list()).append(questions)
+                            largestGroup, list()).append(jsonTmp)
                         tmp = {}
                         tmp["Segment Name"] = segmentName
                         i = 1
@@ -184,15 +182,15 @@ def AllSegments(devicesInfo, segmentType, outputDirectory, segmentNameRegex, **f
                 except:
                     differentCounts["Error"] += 1
                     print("There was an error for " + segmentName)
-        AllQuestions = ""
+        AllQuestions = {}
+        AllQuestions["Segments"] = []
         for largestSizes in sorted(largestGroupSizeStatMap.keys(), reverse=True):
             for diff in largestGroupSizeStatMap[largestSizes]:
-                AllQuestions += diff
-        AllQuestions = json.dumps(
-            differentCounts, sort_keys=True, indent=2) + AllQuestions
+                AllQuestions["Segments"].append(diff)
+        AllQuestions["Stats"] = differentCounts
         createFolder(outputDirectory)
-        with open(outputDirectory + path.sep + "AllDiff.txt", "w") as write_file:
-            write_file.write(AllQuestions)
+        with open(outputDirectory + path.sep + "AllDiff.json", "w") as write_file:
+            json.dump(AllQuestions, write_file, indent=2)
         print("\n Please have a look at the " +
               outputDirectory + " folder for alldifferences")
     else:
@@ -210,7 +208,6 @@ if __name__ == '__main__':
     elif arguments["--network"] and arguments["--snapshot"]:
         bf_set_network(arguments["--network"])
         bf_set_snapshot(arguments["--snapshot"])
-
     if not arguments["statistics"]:
         nodeRegex = arguments["--nodeRegex"]
         namePattern = arguments["--pattern"]
@@ -229,14 +226,20 @@ if __name__ == '__main__':
         if not os.path.exists(arguments["--outputDir"]):
             os.makedirs(arguments["--outputDir"])
         if arguments["--acl"]:
-            csvgen, exactVsSelfStarter = AllSegments(nodesData, ["ipAccessLists"], arguments["--outputDir"] + os.path.sep + "ACLs", namePattern, **aclFunctions)
-            WriteFile(exactVsSelfStarter, "ExactComp.json", arguments["--outputDir"]+ os.path.sep + "ACLs")
+            csvgen, exactVsSelfStarter = AllSegments(nodesData, [
+                                                     "ipAccessLists"], arguments["--outputDir"] + os.path.sep + "ACLs", namePattern, **aclFunctions)
+            WriteFile(exactVsSelfStarter, "ExactComp.json",
+                      arguments["--outputDir"] + os.path.sep + "ACLs")
         if arguments["--prefixlist"]:
-            csvgen, exactVsSelfStarter = AllSegments(nodesData, ["routeFilterLists", "route6FilterLists"], arguments["--outputDir"]+ os.path.sep + "PrefixLists", namePattern, **prefixListFunctions)
-            WriteFile(exactVsSelfStarter, "ExactComp.json", arguments["--outputDir"] + os.path.sep + "PrefixLists")
+            csvgen, exactVsSelfStarter = AllSegments(nodesData, [
+                                                     "routeFilterLists", "route6FilterLists"], arguments["--outputDir"] + os.path.sep + "PrefixLists", namePattern, **prefixListFunctions)
+            WriteFile(exactVsSelfStarter, "ExactComp.json",
+                      arguments["--outputDir"] + os.path.sep + "PrefixLists")
         if arguments["--routemap"]:
-            csvgen, exactVsSelfStarter = AllSegments(nodesData, ["routingPolicies"], arguments["--outputDir"] + os.path.sep + "RoutePolicies", namePattern, **routePolicyFunctions)   
-            WriteFile(exactVsSelfStarter, "ExactComp.json", arguments["--outputDir"] + os.path.sep + "RoutePolicies")
+            csvgen, exactVsSelfStarter = AllSegments(nodesData, [
+                                                     "routingPolicies"], arguments["--outputDir"] + os.path.sep + "RoutePolicies", namePattern, **routePolicyFunctions)
+            WriteFile(exactVsSelfStarter, "ExactComp.json",
+                      arguments["--outputDir"] + os.path.sep + "RoutePolicies")
     else:
         aclMap, prefixMap, routeMap = {},  {}, {}
         Statistics(arguments["--inputDir"], prefixMap, routeMap, aclMap)
