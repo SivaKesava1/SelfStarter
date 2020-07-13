@@ -1033,7 +1033,7 @@ def PrintTemplate(metaTemplate, parametersLines, outputDirectory, patternString,
 
     if len(parametersLines.groupsList) > 1 or singleParamDifferences != "" or spuriousParamDifferences != "":
         commonFunctions.createFolder(finalPath)
-        outputMetaTemplate = "\n\nWe have found the following differences in this PrefixList\n" + \
+        outputMetaTemplate = "\n\nWe have found the following differences in this RoutePolicy\n" + \
             singleParamDifferences + "\n" + spuriousParamDifferences + outputMetaTemplate + "\n"
         commonFunctions.generateHTML(htmlLines, parametersLines, finalPath)
         return outputMetaTemplate, singleParamDifferences, spuriousParamDifferences

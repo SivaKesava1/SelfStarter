@@ -199,9 +199,10 @@ class ACL:
         elif re.match(r'\d+.\d+.\d+.\d+$', prefix):
             ip = prefix
             mask = "0.0.0.0"
-        elif prefix == "172.20.0.0:0.0.235.255":
-            ip = "172.20.0.0"
-            mask = "0.0.255.255"
+        elif ":" in prefix:
+            # Discontiguous mask case
+            ip = prefix.split(":")[0]
+            mask = prefix.split(":")[1]
         else:
             print(
                 "IP and Mask Syntax error- ACL: {} for {}".format(self.name, self.deviceName))
