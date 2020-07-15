@@ -86,15 +86,9 @@ class ACL:
 
     def updatePorts(self, headerSpace, srcPorts, dstPorts):
         if len(headerSpace["dstPorts"]):
-            if len(dstPorts):
-                raise TypeError
-            else:
-                dstPorts = headerSpace["dstPorts"]
+            dstPorts.extend(headerSpace["dstPorts"])
         if len(headerSpace["srcPorts"]):
-            if len(srcPorts):
-                raise TypeError
-            else:
-                srcPorts = headerSpace["srcPorts"]
+            srcPorts.extend(headerSpace["srcPorts"])
         return srcPorts, dstPorts
 
     def processACLDisjunctsConjuncts(self, entities, protocols, srcIps, dstIps, srcPorts, dstPorts):
@@ -113,7 +107,7 @@ class ACL:
                     srcIps.extend(tmp)
                 tmp = self.getSrcOrDstIps(entity["headerSpace"], "dstIps")
                 if tmp != ["0.0.0.0/0"]:
-                    srcIps.extend(tmp)
+                    dstIps.extend(tmp)
                 if len(entity["headerSpace"]["ipProtocols"]) > 0:
                     protocols = entity["headerSpace"]["ipProtocols"]
             elif "FalseExpr" in entity["class"] or "TrueExpr" in entity["class"]:
@@ -157,6 +151,11 @@ class ACL:
                     srcIps = ["0.0.0.0/0"]
                 if not len(dstIps):
                     dstIps = ["0.0.0.0/0"]
+            elif "TrueExpr" in line['matchCondition']['class']:
+                protocols = ["ip"]
+                srcIps = ["0.0.0.0/0"]
+                dstIps = ["0.0.0.0/0"]
+                dstPorts, srcPorts = [], []
             else:
                 print("Unhandled ACL Json model - ACL: {} for {}".format(
                       self.name, self.deviceName))
